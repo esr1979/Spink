@@ -1,0 +1,58 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph Host["Host MacBook"]
+        direction TB
+        A[curl localhost:30080]
+    end
+    
+    subgraph Podman["Podman Layer"]
+        direction TB
+        B[Port Forward<br/>localhost:30080<br/>to 172.18.0.2:30080]
+    end
+    
+    subgraph IpTables["K8s Node - iptables"]
+        direction TB
+        C[iptables Rules<br/>inbound :30080<br/>to KUBE-SVC-SPINK]
+    end
+    
+    subgraph Service["K8s Service Layer"]
+        direction TB
+        D[Service spink<br/>ClusterIP: 10.96.120.15<br/>Port: 80<br/>selector: app=spink]
+    end
+    
+    subgraph EndpointRes["K8s Endpoint Resolution"]
+        direction TB
+        E[Endpoints List<br/>10.244.2.2:8080<br/>10.244.3.5:8080<br/>Load Balance]
+    end
+    
+    subgraph PodNetwork["Pod Network"]
+        direction TB
+        F[CNI Overlay<br/>Route: 10.244.2.2<br/>via flannel/cilium]
+    end
+    
+    subgraph PodContainer["Pod Container"]
+        direction TB
+        G[Spring Boot<br/>Listen 0.0.0.0:8080<br/>/actuator/health]
+    end
+    
+    A -->|Network Packet| B
+    B -->|Enters K8s node| C
+    C -->|DNAT transform| D
+    D -->|kube-proxy lookup| E
+    E -->|DNAT again| F
+    F -->|Routing decision| G
+    
+    style Host fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style Podman fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    style IpTables fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
+    style Service fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    style EndpointRes fill:#1e1e2e,stroke:#eba0ac,color:#cdd6f4
+    style PodNetwork fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
+    style PodContainer fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    style A fill:#313244,stroke:#89b4fa,color:#cdd6f4
+    style B fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style C fill:#313244,stroke:#f38ba8,color:#cdd6f4
+    style D fill:#313244,stroke:#f9e2af,color:#cdd6f4
+    style E fill:#313244,stroke:#eba0ac,color:#cdd6f4
+    style F fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style G fill:#313244,stroke:#a6e3a1,color:#cdd6f4

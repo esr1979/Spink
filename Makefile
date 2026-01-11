@@ -96,8 +96,8 @@ install-net-tools:
 	done
 	@echo "✅ Herramientas instaladas en todos los nodos"
 
-.PHONY: test-net
-test-net: install-net-tools
+.PHONY: test-net-1
+test-net-1: 
 	@echo ""
 	@echo "🧪 LABORATORIO DE RED (NodePort tracing real)"
 	@echo "────────────────────────────────────────────"
@@ -116,3 +116,92 @@ test-net: install-net-tools
 	@echo "   curl http://localhost:$(APP_PORT)/actuator/health"
 	@echo ""
 	podman exec -it $(CLUSTER_NAME)-worker tcpdump -ni any port $(APP_PORT) or port 8080
+
+.PHONY: test-net-2
+test-net-2:
+	@echo ""
+	@echo "🧠 Paso 1: Localizando Pod real..."
+	@POD=$$(kubectl get pod -l app=spink -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	echo "   Pod:  $$POD"; \
+	echo "   IP:   $$POD_IP"; \
+	echo "   Nodo: $$NODE"; \
+	echo ""; \
+	echo "🧠 Paso 2: IP del Service:"; \
+	SVC_IP=$$(kubectl get svc spink -o jsonpath='{.spec.clusterIP}'); \
+	echo "   Service ClusterIP: $$SVC_IP"; \
+	echo ""; \
+	echo "🧠 Paso 3: Lanzando tcpdump en el nodo $$NODE..."; \
+	echo "   (solo tráfico 30080 y 8080)"; \
+	echo ""; \
+	podman exec -d $$NODE sh -c "tcpdump -ni any '(port 30080 or port 8080)' -c 20 > /tmp/net.log"; \
+	sleep 1; \
+	echo "🚀 Paso 4: Ejecutando curl..."; \
+	curl -s http://localhost:$(APP_PORT)/actuator/health > /dev/null; \
+	sleep 2; \
+	echo ""; \
+	echo "📦 Captura REAL del tráfico:"; \
+	echo "------------------------------------------"; \
+	podman exec $$NODE cat /tmp/net.log; \
+	echo "------------------------------------------"; \
+	echo ""; \
+	echo "✅ Fin del test de red"
+
+.PHONY: show-ips
+show-ips:
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🌐 INFORMACIÓN DE IPs Y PUERTOS DE TU CLUSTER"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "📍 CAPA HOST (MacBook):"
+	@echo "   localhost = 127.0.0.1"
+	@echo "   Port: $(APP_PORT) (mapeado por Podman)"
+	@echo ""
+	@echo "📍 CAPA PODMAN (Container Runtime):"
+	@echo "   Control-Plane container IP: 172.18.0.2"
+	@echo "   Port mapping: 127.0.0.1:$(APP_PORT) → 172.18.0.2:$(APP_PORT)"
+	@echo ""
+	@echo "📍 CAPA KUBERNETES (Node IPs - Podman Network):"
+	@kubectl get nodes -o wide | awk 'NR==1 {print "   " $$0} NR>1 {print "   " $$1 " → " $$6}'
+	@echo ""
+	@echo "📍 SERVICE (Kubernetes Virtual):"
+	@kubectl get svc spink -o wide | awk 'NR==2 {print "   Name: " $$1; print "   ClusterIP: " $$3; print "   Port: " $$5; print "   Selector: " $$8 " " $$9}'
+	@echo ""
+	@echo "📍 PODs (Con IPs reales asignadas):"
+	@kubectl get pods -o wide -l app=spink | awk 'NR==1 {print "   " $$0} NR>1 {print "   " $$1 " → IP: " $$6 " on node " $$7}'
+	@echo ""
+	@echo "📍 ENDPOINTS (destinos reales del Service):"
+	@ENDPOINTS=$$(kubectl get endpoints spink -o jsonpath='{.subsets[0].addresses[*].ip}' | tr ' ' ','); \
+	PORTS=$$(kubectl get endpoints spink -o jsonpath='{.subsets[0].ports[0].port}'); \
+	echo "   Service endpoints: $$ENDPOINTS:$$PORTS" || echo "   No endpoints found"
+	@echo ""
+	@echo "📍 IPTABLES RULES (en control-plane):"
+	@echo "   Para ver las reglas reales ejecuta:"
+	@echo "   podman exec ink-cluster-control-plane iptables -t nat -L -n | grep KUBE"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "🔄 FLUJO DEL TRÁFICO:"
+	@echo ""
+	@echo "1️⃣  curl http://localhost:$(APP_PORT)/actuator/health"
+	@echo "   └─ Destino: 127.0.0.1:$(APP_PORT)"
+	@echo ""
+	@echo "2️⃣  Podman Port Forward"
+	@echo "   └─ Redirige a: 172.18.0.2:$(APP_PORT)"
+	@echo ""
+	@echo "3️⃣  Nodo Control-Plane iptables"
+	@echo "   └─ Intercepta puerto $(APP_PORT)"
+	@echo "   └─ Traduce a: Service ClusterIP 10.96.120.15:80"
+	@echo ""
+	@echo "4️⃣  kube-proxy resolución de endpoints"
+	@POD_IP=$$(kubectl get pod -l app=spink -o jsonpath='{.items[0].status.podIP}'); \
+	echo "   └─ Selecciona Pod: $$POD_IP:8080"
+	@echo ""
+	@echo "5️⃣  Pod recibe tráfico"
+	@echo "   └─ Container escucha en 0.0.0.0:8080"
+	@echo "   └─ Spring Boot responde con Health: UP"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""

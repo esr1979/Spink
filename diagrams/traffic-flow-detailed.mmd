@@ -1,0 +1,34 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    A[MacBook Host<br/>localhost:30080]
+    B[Podman Port Forward<br/>localhost:30080 to 172.18.0.2:30080]
+    C[Control-Plane Container<br/>IP: 172.18.0.2]
+    D[iptables NodePort Rule<br/>Port: 30080]
+    E[Service: spink<br/>ClusterIP: 10.96.120.15:80]
+    F[Endpoints Resolution<br/>10.244.2.2:8080]
+    G[Pod Network<br/>10.244.0.0/16]
+    H[Pod: spink-xxxxx<br/>Container Port: 8080]
+    I[Response Path<br/>Reversed]
+    J[Back to MacBook<br/>localhost:30080]
+    
+    A -->|curl localhost:30080| B
+    B -->|Podman NAT| C
+    C -->|iptables intercepts| D
+    D -->|DNAT to Service| E
+    E -->|Resolve endpoints| F
+    F -->|DNAT to Pod IP| G
+    G -->|CNI routing| H
+    H -->|200 OK response| I
+    I -->|Reverse NAT| J
+    
+    style A fill:#313244,stroke:#89b4fa,color:#cdd6f4
+    style B fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style C fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style D fill:#313244,stroke:#f38ba8,color:#cdd6f4
+    style E fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style F fill:#313244,stroke:#eba0ac,color:#cdd6f4
+    style G fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style H fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style I fill:#313244,stroke:#f9e2af,color:#cdd6f4
+    style J fill:#313244,stroke:#89b4fa,color:#cdd6f4
+```
