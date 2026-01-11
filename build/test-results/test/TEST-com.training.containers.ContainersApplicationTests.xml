@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.training.containers.ContainersApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-01-10T16:51:35.949Z" hostname="Enriques-Mac-mini.local" time="0.386">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.training.containers.ContainersApplicationTests" time="0.386"/>
+  <system-out><![CDATA[17:51:34.888 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.training.containers.ContainersApplicationTests]: ContainersApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+17:51:34.949 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.training.containers.ContainersApplication for test class com.training.containers.ContainersApplicationTests
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-01-10T17:51:35.170+01:00  INFO 10213 --- [containers] [    Test worker] c.t.c.ContainersApplicationTests         : Starting ContainersApplicationTests using Java 21.0.7 with PID 10213 (started by esr1979 in /Users/esr1979/Projects/Spink)
+2026-01-10T17:51:35.171+01:00  INFO 10213 --- [containers] [    Test worker] c.t.c.ContainersApplicationTests         : No active profile set, falling back to 1 default profile: "default"
+2026-01-10T17:51:35.575+01:00  INFO 10213 --- [containers] [    Test worker] c.t.containers.ContainersApplication     : ]]>&#x1f680;<![CDATA[ Spring Boot application started successfully, hello there!
+2026-01-10T17:51:35.864+01:00  INFO 10213 --- [containers] [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-01-10T17:51:35.892+01:00  INFO 10213 --- [containers] [    Test worker] c.t.c.ContainersApplicationTests         : Started ContainersApplicationTests in 0.863 seconds (process running for 1.596)
+2026-01-10T17:51:35.896+01:00  INFO 10213 --- [containers] [   scheduling-1] c.t.containers.ContainersApplication     : ]]>&#x1f493;<![CDATA[ I am alive and still running...
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (/Users/esr1979/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.17.8/f09415827a71be7ed621c7bd02550678f28bc81c/byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

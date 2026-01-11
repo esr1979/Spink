@@ -1,0 +1,37 @@
+flowchart TB
+    classDef mac fill:#0b0f14,stroke:#7aa2f7,stroke-width:2px,color:#cdd6f4
+    classDef ctl fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
+    classDef node fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+    classDef svc fill:#111827,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+    classDef pod fill:#11111b,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+
+    Mac["🖥️ Mac<br/>192.168.1.10<br/>curl localhost:8080"]
+
+    Kubectl["🔧 kubectl<br/>TCP proxy<br/>localhost:8080"]
+
+    APIServer["☸️ kube-apiserver<br/>172.18.0.2:6443<br/>SPDY/WebSocket"]
+
+    Kubelet["🧩 kubelet<br/>Node 172.18.0.4"]
+
+    Service["🔀 Service spink<br/>ClusterIP 10.96.204.226:80"]
+
+    Pod["📦 Pod spink<br/>10.244.1.7:8080"]
+
+    %% Shared start
+    Mac --> Kubectl
+    Kubectl --> APIServer
+
+    %% Option A: port-forward POD
+    APIServer -->|port-forward pod/spink 8080:8080| Kubelet
+    Kubelet --> Pod
+
+    %% Option B: port-forward SERVICE
+    APIServer -->|port-forward svc/spink 8080:80| Service
+    Service --> Pod
+
+    class Mac mac
+    class Kubectl mac
+    class APIServer ctl
+    class Kubelet node
+    class Service svc
+    class Pod pod

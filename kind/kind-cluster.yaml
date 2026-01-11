@@ -1,0 +1,15 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: ink-cluster
+nodes:
+  - role: control-plane
+    # To enable NodePort mapping on the host machine. This redirection
+    # allows accessing NodePort services via localhost:NodePort on the host..
+    # This is not needed in production environments and is a PODMAN redirection
+    # to the control plane node.
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+  - role: worker
+  - role: worker

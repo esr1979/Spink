@@ -1,0 +1,27 @@
+flowchart TB
+    classDef mac fill:#0b0f14,stroke:#7aa2f7,stroke-width:2px,color:#cdd6f4
+    classDef podman fill:#111827,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+    classDef node fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+    classDef svc fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
+    classDef pod fill:#11111b,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+
+    Mac["🖥️ Mac<br/>192.168.1.10<br/>curl localhost:30080"]
+
+    Podman["🧱 Podman<br/>port mapping<br/>localhost:30080 → 30080"]
+
+    Node["🧩 kind node (container)<br/>IP: 172.18.0.4<br/>NodePort:30080"]
+
+    Service["🔀 Service spink<br/>Type: NodePort<br/>30080 → 80"]
+
+    Pod1["📦 Pod spink-1<br/>10.244.1.7:8080"]
+    Pod2["📦 Pod spink-2<br/>10.244.2.3:8080"]
+
+    Mac --> Podman --> Node --> Service
+    Service --> Pod1
+    Service --> Pod2
+
+    class Mac mac
+    class Podman podman
+    class Node node
+    class Service svc
+    class Pod1,Pod2 pod

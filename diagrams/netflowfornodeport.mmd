@@ -1,0 +1,61 @@
+flowchart TD
+    A["Mac<br/>curl localhost:30080"]
+
+    A --> B["Podman port forwarding<br/>localhost:30080 → control-plane:30080"]
+
+    B --> C["Contenedor Podman<br/>Nodo control-plane<br/>IP: 172.18.0.2"]
+
+    C --> D["iptables NodePort rule<br/>:30080 → Service ClusterIP"]
+
+    D --> E["kube-proxy rules"]
+
+    E --> F["Service spink (virtual)<br/>ClusterIP: 10.96.120.15<br/>Port 80"]
+
+    F --> G["Endpoint mapping<br/>Pod IP 10.244.2.2:8080"]
+
+    G --> H["Pod spink<br/>Container Spring Boot<br/>Listening on :8080"]
+
+    subgraph "Worker Node - Container"
+        H
+    end
+
+    subgraph "Control Plane Node - Container"
+        C
+        D
+        E
+    end
+
+    subgraph "Notes"
+        direction TB
+        N["<div style='text-align:left'>1 🖥️ Mac receives the curl at localhost:30080<br/>
+2 🧱 Podman says:<br/>
+this goes to the control-plane container port 30080<br/>
+3 📦 It arrives at the control-plane node Podman container<br/>
+4 🔥 iptables of the node intercepts:<br/>
+port 30080 → NodePort rule<br/>
+5 🔁 kube-proxy transforms that into:<br/>
+this corresponds to the Service spink<br/>
+6 🎯 kube-proxy looks at the service endpoints:<br/>
+kubectl get endpoints spink<br/>
+→ 10.244.2.2:8080<br/>
+7 📡 Kubernetes internal network sends traffic to:<br/>
+Pod IP 10.244.2.2 port 8080<br/>
+8 ☕ Spring Boot responds<br/>
+9 🔙 The response returns exactly via the same path to your Mac</div>"]
+    end
+
+    classDef mac fill:#0b0f14,stroke:#7aa2f7,stroke-width:2px,color:#cdd6f4
+    classDef podman fill:#111827,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+    classDef node fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+    classDef iptables fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
+    classDef kubeproxy fill:#262626,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+    classDef svc fill:#111827,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+    classDef endpoint fill:#313244,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
+    classDef pod fill:#11111b,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+
+    class A mac
+    class B podman
+    class C node
+    class D iptables
+    class E kubeproxy
+    
