@@ -1,0 +1,19 @@
+flowchart LR
+    Mac["🧑‍💻 Tu Mac\ncurl localhost:30080"]
+
+    subgraph Podman["Podman (contenedores)"]
+        CP["Nodo control-plane\n(Contenedor Linux)"]
+        W1["Worker 1\n(Contenedor Linux)"]
+        W2["Worker 2\n(Contenedor Linux)"]
+    end
+
+    subgraph Kubernetes["Cluster Kubernetes"]
+        Service["Service spink\n(reglas iptables)"]
+        Pod1["Pod spink\n10.244.1.2:8080"]
+        Pod2["Pod spink\n10.244.2.2:8080"]
+    end
+
+    Mac -->|30080| CP
+    CP -->|iptables kube-proxy| Service
+    Service --> Pod1
+    Service --> Pod2

@@ -1,0 +1,61 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph L1["Layer 1: Host Machine"]
+        direction LR
+        MAC[MacBook OS: macOS<br/>IP Stack]
+    end
+    
+    subgraph L2["Layer 2: Container Runtime"]
+        direction LR
+        POD[Podman Container Engine<br/>Port Mapping:<br/>127.0.0.1:30080 NAT<br/>172.18.0.2:30080]
+    end
+    
+    subgraph L3["Layer 3: Kind Control-Plane"]
+        direction LR
+        CP[Control-Plane Container<br/>IP: 172.18.0.2<br/>Services: kube-proxy<br/>kube-apiserver etcd]
+    end
+    
+    subgraph L4["Layer 4: Kind Workers"]
+        direction LR
+        W1[Worker-1<br/>IP: 172.18.0.3<br/>kubelet kube-proxy]
+        W2[Worker-2<br/>IP: 172.18.0.4<br/>kubelet kube-proxy]
+    end
+    
+    subgraph L5["Layer 5: Kubernetes Networking"]
+        direction TB
+        SVC[Service: spink<br/>Type: NodePort<br/>ClusterIP: 10.96.120.15<br/>Port: 80<br/>NodePort: 30080<br/>Target: 8080]
+        EP[Endpoints<br/>Pod-1: 10.244.2.2:8080<br/>Pod-2: 10.244.3.5:8080]
+        IPS[iptables Rules<br/>TCP port 30080<br/>kube-proxy DNAT<br/>Service IP:Port]
+    end
+    
+    subgraph L6["Layer 6: Pod Network"]
+        direction LR
+        PODS[Pod: spink-abc123<br/>IP: 10.244.2.2<br/>Container spink<br/>Listen: 0.0.0.0:8080<br/>Spring Boot]
+    end
+    
+    MAC -->|curl localhost:30080| POD
+    POD -->|NAT Translation| CP
+    CP -->|Coordinates via<br/>control-plane| W1
+    CP -->|Coordinates via<br/>control-plane| W2
+    W1 -->|Runs pods &<br/>routes traffic| L5
+    W2 -->|Runs pods &<br/>routes traffic| L5
+    CP -->|Node receives| IPS
+    IPS -->|iptables DNAT| SVC
+    SVC -->|Resolve endpoints| EP
+    EP -->|Select pod| PODS
+    
+    style L1 fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style L2 fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    style L3 fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
+    style L4 fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
+    style L5 fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    style L6 fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    style MAC fill:#313244,stroke:#89b4fa,color:#cdd6f4
+    style POD fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style CP fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style W1 fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style W2 fill:#313244,stroke:#cba6f7,color:#cdd6f4
+    style SVC fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style EP fill:#313244,stroke:#eba0ac,color:#cdd6f4
+    style IPS fill:#313244,stroke:#f38ba8,color:#cdd6f4
+    style PODS fill:#313244,stroke:#a6e3a1,color:#cdd6f4
