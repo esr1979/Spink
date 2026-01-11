@@ -1,0 +1,23 @@
+flowchart TD
+    subgraph MAC["🖥️ Tu Mac (macOS)"]
+        CURL["curl localhost:30080"]
+    end
+
+    subgraph PODMAN["🐳 Podman VM / Red virtual"]
+        PODMAN_NET["NAT de Podman"]
+    end
+
+    subgraph NODE["📦 Contenedor kind: ink-cluster-worker (Nodo Kubernetes)\nIP: 10.89.0.15"]
+        IPTABLES["🔁 iptables (kube-proxy)\nRegla: 30080 → 10.244.1.2:8080"]
+    end
+
+    subgraph POD["📦 Pod spink\nIP: 10.244.1.2"]
+        APP["☕ Spring Boot\nEscuchando en :8080"]
+    end
+
+    CURL --> PODMAN_NET
+    PODMAN_NET --> IPTABLES
+    IPTABLES --> APP
+    APP --> IPTABLES
+    IPTABLES --> PODMAN_NET
+    PODMAN_NET --> CURL
