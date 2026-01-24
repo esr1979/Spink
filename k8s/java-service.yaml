@@ -2,24 +2,24 @@
 # This Service of type NodePort exposes the application on a static port on each Node's IP
 # and forwards traffic to the target port on the Pods selected by the Service.
 # It is only a set of rules to route the traffic (iptables) plus objects in etcd.
-# The Service routes traffic to Pods with the label app: spink defined in the Deployment.
+# The Service routes traffic to Pods with the label app: spink-java defined in the Deployment.
 # kube-proxy is responsible for maintaining network rules on nodes.
 # Learn more: https://kubernetes.io/docs/concepts/services-networking/service/
 apiVersion: v1
 kind: Service
 metadata:
-  name: spink
+  name: spink-java
 spec:
   # When using NodePort, the service is exposed on each Node's IP at a static port (the NodePort).
-  # You’ll be able to contact the NodePort service, from outside the cluster, by requesting <NodeIP>:<NodePort>.
+  # You'll be able to contact the NodePort service, from outside the cluster, by requesting <NodeIP>:<NodePort>.
   # This is useful for development and testing environments. In production, consider using a LoadBalancer or Ingress.
   # NodePort range is typically 30000-32767. Here we set it to 30080 for easy access via localhost:30080.
   # Learn more: https://kubernetes.io/docs/concepts/services-networking/service/#nodeport
   type: NodePort
-  # Selects all pods with label app: spink to route traffic to.
+  # Selects all pods with label app: spink-java to route traffic to.
   # Make sure this label matches the one defined in the Deployment.
   selector:
-    app: spink
+    app: spink-java
   ports:
     - port: 80
       targetPort: 8080

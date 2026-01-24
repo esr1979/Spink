@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spink-go
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spink-go
+  template:
+    metadata:
+      labels:
+        app: spink-go
+    spec:
+      containers:
+        - name: spink-go
+          image: localhost/spink-go:1.0.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_NAME
+              value: "spink-go"
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
