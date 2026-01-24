@@ -1,0 +1,12 @@
+.gradle/
+build/
+.vscode/
+.DS_Store
+
+*.jar
+*.war
+
+**/test-results/
+**/reports/
+**/*.bin
+**/*.lock
