@@ -18,34 +18,54 @@ KIND_NODES := $(shell podman ps --format "{{.Names}}" | grep $(CLUSTER_NAME))
 help:
 	@echo ""
 	@echo "🚀 Spink Project (Java + Go)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "🏷️  Java Version:  $(APP_VERSION)"
 	@echo "📦 Java Image:   $(IMAGE_JAVA)"
 	@echo "📦 Go Image:     $(IMAGE_GO)"
+	@echo "🌐 Cluster:      $(CLUSTER_NAME)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "JAVA Targets:"
-	@echo "  make build-java      🛠️  Build Java with Gradle"
-	@echo "  make image-java      🐳 Build Java image"
-	@echo "  make image-load-java 📥 Load Java image into kind"
-	@echo "  make deploy-java     ☸️  Deploy Java to K8s"
-	@echo "  make wait-java       ⏳ Wait until Java is Ready"
-	@echo "  make curl-java       🌍 Test Java (port $(APP_JAVA_PORT))"
+	@echo "  make build-java        🛠️  Build Java with Gradle"
+	@echo "  make image-java        🐳 Build Java image"
+	@echo "  make image-load-java   📥 Load Java image into kind"
+	@echo "  make deploy-java       ☸️  Deploy Java to K8s"
+	@echo "  make wait-java         ⏳ Wait until Java is Ready"
+	@echo "  make curl-java         🌍 Test Java (port $(APP_JAVA_PORT))"
 	@echo ""
 	@echo "GO Targets:"
-	@echo "  make build-go        🛠️  Build Go"
-	@echo "  make image-go        🐳 Build Go image"
-	@echo "  make image-load-go   📥 Load Go image into kind"
-	@echo "  make deploy-go       ☸️  Deploy Go to K8s"
-	@echo "  make wait-go         ⏳ Wait until Go is Ready"
-	@echo "  make curl-go         🌍 Test Go (port $(APP_GO_PORT))"
+	@echo "  make build-go          🛠️  Build Go"
+	@echo "  make image-go          🐳 Build Go image"
+	@echo "  make image-load-go     📥 Load Go image into kind"
+	@echo "  make deploy-go         ☸️  Deploy Go to K8s"
+	@echo "  make wait-go           ⏳ Wait until Go is Ready"
+	@echo "  make curl-go           🌍 Test Go (port $(APP_GO_PORT))"
 	@echo ""
-	@echo "INGRESS Targets:"
-	@echo "  make deploy-ingress  🌐 Deploy Ingress with routing"
-	@echo "  make curl-ingress    🌍 Test Ingress (java.local, go.local)"
+	@echo "INGRESS & INFRA Targets:"
+	@echo "  make install-nginx-ingress 🌐 Install Nginx Ingress Controller"
+	@echo "  make deploy-ingress    🚀 Apply Ingress routing rules"
+	@echo "  make curl-ingress      🌍 Test Ingress (java.local, go.local)"
+	@echo ""
+	@echo "🧪 NETWORKING LAB (Diagnóstico avanzado):"
+	@echo "  make show-ips          📍 Mapa completo de IPs, Ports y Endpoints"
+	@echo "  make trace             🕵️  Captura HTTP real (Header/Payload)"
+	@echo "  make trace-deep        🧠 Captura TCP detallada (SYN/ACK/Flags)"
+	@echo "  make trace-visual      📍 Visualiza el salto Mac ➜ Nodo ➜ Pod"
+	@echo "  make trace-iptables    📜 Muestra las reglas NAT del Kernel"
+	@echo "  make trace-explain     🧠 Traducción de iptables a lenguaje humano"
+	@echo "  make trace-animate     🎬 Animación del flujo real de un paquete"
+	@echo "  make test-net-1        👂 Modo manual: tcpdump interactivo"
+	@echo "  make test-net-2        🧪 Modo auto: test de red paso a paso"
 	@echo ""
 	@echo "GENERAL Targets:"
-	@echo "  make all             🎯 Full pipeline (Java + Go + Ingress)"
-	@echo "  make clean-k8s       🧹 Delete K8s resources"
-	@echo "  make reset-cluster   💥 Recreate kind cluster"
+	@echo "  make all               🎯 FULL PIPELINE (Cluster + Ingress + Apps + Tests)"
+	@echo "  make deploy            ☸️  Deploy all apps and ingress"
+	@echo "  make wait              ⏳ Wait for all apps to be ready"
+	@echo "  make curl              🧪 Run all health checks (Java, Go, Ingress)"
+	@echo "  make clean-k8s         🧹 Delete K8s resources"
+	@echo "  make reset-cluster     💥 Recreate kind cluster"
+	@echo "  make check-podman      ⚙️  Check/Start Podman machine"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 
 # ═══════════════════════════════════════════════════════════
@@ -237,3 +257,293 @@ all: check-podman
 	@echo "   127.0.0.1 java.local"
 	@echo "   127.0.0.1 go.local"
 	@echo ""
+
+# ═══════════════════════════════════════════════════════════
+# NET TOOLS
+# ═══════════════════════════════════════════════════════════
+
+.PHONY: test-net-1
+test-net-1: 
+	@echo ""
+	@echo "🧪 LABORATORIO DE RED (NodePort tracing real)"
+	@echo "────────────────────────────────────────────"
+	@echo ""
+	@echo "📦 Pods e IPs:"
+	kubectl get pods -o wide
+	@echo ""
+	@echo "🌐 Service:"
+	kubectl get svc spink-java
+	@echo ""
+	@echo "🖥️  Nodes:"
+	kubectl get nodes -o wide
+	@echo ""
+	@echo "👂 Escuchando tráfico en nodo worker (Ctrl+C para parar)"
+	@echo "➡️  Ejecuta en otra terminal:"
+	@echo "   curl http://localhost:$(APP_JAVA_PORT)/actuator/health"
+	@echo ""
+	podman exec -it $(CLUSTER_NAME)-worker tcpdump -ni any port $(APP_JAVA_PORT) or port 8080
+
+.PHONY: test-net-2
+test-net-2:
+	@echo ""
+	@echo "🧠 Paso 1: Localizando Pod de Java..."
+	@# Buscamos el primer pod de spink-java y extraemos sus datos
+	@POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	echo "   Pod:  $$POD"; \
+	echo "   IP:   $$POD_IP"; \
+	echo "   Nodo: $$NODE"; \
+	echo ""; \
+	echo "🧠 Paso 2: IP del Service (spink-java):"; \
+	SVC_IP=$$(kubectl get svc spink-java -o jsonpath='{.spec.clusterIP}'); \
+	echo "   Service ClusterIP: $$SVC_IP"; \
+	echo ""; \
+	echo "🧠 Paso 3: Lanzando tcpdump en el nodo $$NODE..."; \
+	echo "   (Capturando tráfico en puertos $(APP_JAVA_PORT) y 8080)"; \
+	echo ""; \
+	podman exec -d $$NODE sh -c "tcpdump -ni any '(port $(APP_JAVA_PORT) or port 8080)' -c 20 > /tmp/net_trace.log 2>&1"; \
+	sleep 2; \
+	echo "🚀 Paso 4: Ejecutando curl de prueba..."; \
+	curl -s http://localhost:$(APP_JAVA_PORT)/actuator/health > /dev/null; \
+	sleep 2; \
+	echo ""; \
+	echo "📦 Captura REAL del tráfico en $$NODE:"; \
+	echo "----------------------------------------------------------------"; \
+	podman exec $$NODE cat /tmp/net_trace.log || echo "No se pudo leer la captura"; \
+	echo "----------------------------------------------------------------"; \
+	echo ""; \
+	echo "✅ Fin del test de red (Paso a paso completado)"
+
+.PHONY: show-ips
+show-ips:
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🌐 INFORMACIÓN DE IPs Y PUERTOS DE TU CLUSTER (JAVA & GO)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "📍 CAPA HOST (MacBook):"
+	@echo "   localhost = 127.0.0.1"
+	@echo "   Java Port: $(APP_JAVA_PORT) | Go Port: $(APP_GO_PORT)"
+	@echo ""
+	@echo "📍 CAPA PODMAN (Container Runtime):"
+	@CP_IP=$$(podman inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(CLUSTER_NAME)-control-plane); \
+	echo "   Control-Plane container IP: $$CP_IP"; \
+	echo "   Mapping: 127.0.0.1:$(APP_JAVA_PORT) → $$CP_IP:$(APP_JAVA_PORT)"
+	@echo ""
+	@echo "📍 CAPA KUBERNETES (Node IPs - Podman Network):"
+	@kubectl get nodes -o wide | awk 'NR==1 {print "   " $$0} NR>1 {print "   " $$1 " → " $$6}'
+	@echo ""
+	@echo "📍 SERVICES (Kubernetes Virtual IPs):"
+	@kubectl get svc spink-java spink-go -o wide | awk 'NR==1 {print "   " $$0} NR>1 {print "   " $$0}'
+	@echo ""
+	@echo "📍 PODs (IPs reales de los contenedores):"
+	@kubectl get pods -o wide -l 'app in (spink-java, spink-go)' | awk 'NR==1 {print "   " $$0} NR>1 {print "   " $$0}'
+	@echo ""
+	@echo "📍 ENDPOINTS (Destinos finales de red):"
+	@echo "   Java: $$(kubectl get endpoints spink-java -o jsonpath='{.subsets[0].addresses[*].ip}' | tr ' ' ', '):8080"
+	@echo "   Go:   $$(kubectl get endpoints spink-go -o jsonpath='{.subsets[0].addresses[*].ip}' | tr ' ' ', '):8080"
+	@echo ""
+	@echo "📍 IPTABLES RULES (Detección de ruteo):"
+	@podman exec $(CLUSTER_NAME)-control-plane iptables -t nat -S | grep $(APP_JAVA_PORT) || echo "   (No se encontraron reglas activas)"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "🔄 FLUJO DEL TRÁFICO (Ejemplo Java):"
+	@echo ""
+	@echo "1️⃣  curl http://localhost:$(APP_JAVA_PORT)/actuator/health"
+	@echo "   └─ Destino: 127.0.0.1 (Tu Mac)"
+	@echo ""
+	@echo "2️⃣  Podman Port Forward"
+	@CP_IP=$$(podman inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(CLUSTER_NAME)-control-plane); \
+	echo "   └─ Redirige a IP del Nodo: $$CP_IP:$(APP_JAVA_PORT)"
+	@echo ""
+	@echo "3️⃣  Iptables en Nodo (DNAT)"
+	@SVC_IP=$$(kubectl get svc spink-java -o jsonpath='{.spec.clusterIP}'); \
+	echo "   └─ Traduce NodePort $(APP_JAVA_PORT) a Service IP: $$SVC_IP:80"
+	@echo ""
+	@echo "4️⃣  Kube-proxy (Balanceo)"
+	@POD_IP=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].status.podIP}'); \
+	echo "   └─ Selecciona un Endpoint real, ej: $$POD_IP:8080"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+
+.PHONY: trace
+trace:
+	@echo ""
+	@echo "🧠 Localizando destino..."
+	@POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	echo "📦 Pod: $$POD | 🖥️ Nodo: $$NODE"; \
+	echo "🕵️ Capturando tráfico (4 segundos)..."; \
+	podman exec $$NODE sh -c "timeout 4 tcpdump -n -i any -A '(port $(APP_JAVA_PORT) or port 8080) and tcp' > /tmp/trace.log 2>&1 &"; \
+	sleep 1; \
+	echo "🌍 Ejecutando curl..."; \
+	curl -s http://localhost:$(APP_JAVA_PORT)/actuator/health > /dev/null; \
+	sleep 3; \
+	echo "📜 Resultado del tráfico:"; \
+	echo "------------------------------------------------------------"; \
+	podman exec $$NODE cat /tmp/trace.log | grep -E 'IP |GET /|HTTP/1.1' | head -n 20; \
+	echo "------------------------------------------------------------"; \
+	echo "✅ Trace finalizado correctamente."
+
+.PHONY: trace-deep
+trace-deep:
+	@echo ""
+	@echo "🧠 Localizando destino..."
+	@POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	echo "📦 Pod: $$POD | 🖥️ Nodo: $$NODE"; \
+	echo "🧠 Captura TCP detallada (4 segundos)..."; \
+	podman exec $$NODE sh -c "timeout 4 tcpdump -n -tttt -i any '(port $(APP_JAVA_PORT) or port 8080) and tcp' > /tmp/deep.log 2>&1 &"; \
+	sleep 1; \
+	echo "🌍 Ejecutando curl..."; \
+	curl -s http://localhost:$(APP_JAVA_PORT)/actuator/health > /dev/null; \
+	sleep 3; \
+	echo "📜 Paquetes capturados:"; \
+	echo "------------------------------------------------------------"; \
+	podman exec $$NODE cat /tmp/deep.log | head -n 20; \
+	echo "------------------------------------------------------------"; \
+	echo "✅ Trace-deep finalizado."
+
+.PHONY: trace-visual
+trace-visual:
+	@echo ""
+	@echo "🧠 Descubriendo infraestructura real..."
+	@SVC=spink-java; \
+	POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	echo ""; \
+	echo "📦 Pod:     $$POD"; \
+	echo "🖥  Nodo:    $$NODE"; \
+	echo "🌐 IP Pod:   $$POD_IP"; \
+	echo ""; \
+	echo "📍 Ruta REAL que sigue tu curl:"; \
+	echo ""; \
+	echo " [Tu Mac]"; \
+	echo "   localhost:$(APP_JAVA_PORT)"; \
+	echo "        │"; \
+	echo "        ▼"; \
+	echo " [Nodo kind ($$NODE)]"; \
+	echo "   :$(APP_JAVA_PORT)"; \
+	echo "        │  kube-proxy + iptables (DNAT)"; \
+	echo "        ▼"; \
+	echo " [Pod spink-java]"; \
+	echo "   $$POD_IP:8080"; \
+	echo ""; \
+	echo "🕵️ Capturando flujo simplificado durante 6 segundos..."; \
+	echo "------------------------------------------------------------"; \
+	(podman exec $$NODE sh -c "timeout 6 tcpdump -n -tt -q -i any '(host $$POD_IP and port 8080) or port $(APP_JAVA_PORT)' 2>/dev/null" &); \
+	sleep 1; \
+	echo "🌍 Ejecutando curl real:"; \
+	curl -s http://localhost:$(APP_JAVA_PORT)/actuator/health; \
+	sleep 5; \
+	echo "------------------------------------------------------------"; \
+	echo "✅ Fin del trace-visual"
+
+.PHONY: trace-iptables
+trace-iptables:
+	@echo ""
+	@echo "🧠 Descubriendo servicio spink-java..."
+	@SVC=spink-java; \
+	POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	CLUSTER_IP=$$(kubectl get svc $$SVC -o jsonpath='{.spec.clusterIP}'); \
+	NODEPORT=$(APP_JAVA_PORT); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	echo "   📦 Pod:        $$POD"; \
+	echo "   🌐 IP Pod:     $$POD_IP"; \
+	echo "   🌐 ClusterIP:  $$CLUSTER_IP"; \
+	echo "   🚪 NodePort:   $$NODEPORT"; \
+	echo "   🖥️  Nodo:       $$NODE"; \
+	echo ""; \
+	echo "📜 Reglas iptables relevantes (nat table)"; \
+	echo "------------------------------------------------------------"; \
+	podman exec $$NODE sh -c "iptables -t nat -S | grep $$NODEPORT || true; echo ''; iptables -t nat -S | grep $$CLUSTER_IP || true; echo ''; iptables -t nat -S | grep $$POD_IP || true"; \
+	echo "------------------------------------------------------------"; \
+	echo ""; \
+	echo "🧠 Lectura humana:"; \
+	echo "   curl localhost:$$NODEPORT"; \
+	echo "     → KUBE-NODEPORTS (Entrada)"; \
+	echo "     → KUBE-SVC-* (Regla del Servicio)"; \
+	echo "     → KUBE-SEP-* (Endpoint del Pod)"; \
+	echo "     → DNAT $$POD_IP:8080 (Destino Final)"; \
+	echo ""; \
+	echo "✅ Fin trace-iptables"
+
+.PHONY: trace-explain
+trace-explain:
+	@echo ""
+	@echo "🧠 Analizando enrutamiento real de Kubernetes..."
+	@SVC=spink-java; \
+	POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	CLUSTER_IP=$$(kubectl get svc $$SVC -o jsonpath='{.spec.clusterIP}'); \
+	NODEPORT=$(APP_JAVA_PORT); \
+	echo "   📦 Pod:        $$POD"; \
+	echo "   🌐 IP Pod:     $$POD_IP"; \
+	echo "   🌐 ClusterIP:  $$CLUSTER_IP"; \
+	echo "   🚪 NodePort:   $$NODEPORT"; \
+	echo "   🖥️  Nodo:       $$NODE"; \
+	echo ""; \
+	echo "📜 Buscando reglas reales en iptables (nat)..."; \
+	echo "------------------------------------------------------------"; \
+	podman exec $$NODE sh -c "iptables -t nat -S | grep $$NODEPORT || true; iptables -t nat -S | grep $$CLUSTER_IP || true; iptables -t nat -S | grep $$POD_IP || true"; \
+	echo "------------------------------------------------------------"; \
+	echo ""; \
+	echo "🧠 Traducción humana:"; \
+	echo "   1️⃣ Tu curl entra por localhost:$$NODEPORT"; \
+	echo "   2️⃣ kube-proxy detecta tráfico NodePort ($$NODEPORT)"; \
+	echo "   3️⃣ iptables lo redirige a Service ($$CLUSTER_IP)"; \
+	echo "   4️⃣ iptables aplica DNAT hacia el pod"; \
+	echo "   5️⃣ Destino final real: $$POD_IP:8080"; \
+	echo ""; \
+	echo "📌 'Todo lo que entra por el puerto $$NODEPORT acaba en $$POD_IP:8080'"; \
+	echo ""; \
+	echo "✅ Fin del trace-explain"
+
+.PHONY: trace-animate
+trace-animate:
+	@echo ""
+	@echo "🎬 TRACE ANIMATE — siguiendo un paquete REAL paso a paso"
+	@SVC=spink-java; \
+	POD=$$(kubectl get pod -l app=spink-java -o jsonpath='{.items[0].metadata.name}'); \
+	POD_IP=$$(kubectl get pod $$POD -o jsonpath='{.status.podIP}'); \
+	NODE=$$(kubectl get pod $$POD -o jsonpath='{.spec.nodeName}'); \
+	NODEPORT=$(APP_JAVA_PORT); \
+	CLUSTER_IP=$$(kubectl get svc $$SVC -o jsonpath='{.spec.clusterIP}'); \
+	echo "   📦 Pod:       $$POD"; \
+	echo "   🌐 IP Pod:    $$POD_IP"; \
+	echo "   🖥️  Nodo:      $$NODE"; \
+	echo "   🚪 NodePort:  $$NODEPORT"; \
+	echo "   🌐 ClusterIP: $$CLUSTER_IP"; \
+	echo ""; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "1️⃣  curl desde tu Mac: http://localhost:$$NODEPORT"; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "2️⃣  Reglas iptables detectadas en $$NODE:"; \
+	podman exec $$NODE sh -c "iptables -t nat -S | grep $$NODEPORT | head -n 1 || true; iptables -t nat -S | grep $$POD_IP | head -n 1 || true"; \
+	echo ""; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "3️⃣  Traducción: :$$NODEPORT ➜ Service $$CLUSTER_IP ➜ Pod $$POD_IP:8080"; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "4️⃣  Captura de tráfico real (6 segundos)..."; \
+	podman exec $$NODE sh -c "timeout 6 tcpdump -n -q -tt -i any '(host $$POD_IP and port 8080) or port $$NODEPORT' > /tmp/animate.log 2>&1 &"; \
+	sleep 1; \
+	curl -s http://localhost:$$NODEPORT/actuator/health > /dev/null; \
+	sleep 5; \
+	echo ""; \
+	podman exec $$NODE cat /tmp/animate.log || echo "⚠️ Reintenta (balanceo de carga)"; \
+	echo ""; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "5️⃣  Resumen final:"; \
+	echo "   [Tu Mac] ➜ [Nodo:$$NODEPORT] ➜ [Service:$$CLUSTER_IP] ➜ [Pod:$$POD_IP:8080]"; \
+	echo ""; \
+	echo "✅ Fin del trace-animate"
+
+
