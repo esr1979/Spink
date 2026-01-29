@@ -1,0 +1,71 @@
+# ═══════════════════════════════════════════════════════════════════════
+# OPTION A: PATH-BASED ROUTING (Disabled)
+# Routes traffic based on URL paths: /java and /go
+# Useful for simple deployments where both apps are under the same domain
+# Access: curl http://localhost/java/actuator/health
+#         curl http://localhost/go/health
+# ═══════════════════════════════════════════════════════════════════════
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: spink-ingress
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#     - http:
+#         paths:
+#           - path: /java
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: spink-java
+#                 port:
+#                   number: 80
+#           - path: /go
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: spink-go
+#                 port:
+#                   number: 80
+
+# ═══════════════════════════════════════════════════════════════════════
+# OPTION B: SUBDOMAIN-BASED ROUTING (Active)
+# Routes traffic based on hostnames: java.local and go.local
+# More scalable approach - each service gets its own domain
+# Requires adding entries to /etc/hosts:
+#   127.0.0.1 java.local
+#   127.0.0.1 go.local
+# Access: curl http://java.local/actuator/health
+#         curl http://go.local/health
+# ═══════════════════════════════════════════════════════════════════════
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spink-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: java.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spink-java
+                port:
+                  number: 80
+    - host: go.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spink-go
+                port:
+                  number: 80
+
+# curl http://java.local/actuator/health
+# curl http://go.local/health

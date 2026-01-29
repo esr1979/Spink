@@ -1,0 +1,73 @@
+# ============================================================
+# Makefile.watch
+# ------------------------------------------------------------
+# Real-time Kubernetes observability helpers.
+#
+# This file provides lightweight monitoring dashboards using
+# only standard CLI tools (kubectl, watch, awk, tput).
+# It is intended to complement the main Makefile by offering
+# quick insights into the cluster state without needing
+# complex UIs or installations.
+# ============================================================
+
+.DEFAULT_GOAL := help
+
+# ------------------------------------------------------------
+# help
+# ------------------------------------------------------------
+# Displays available targets and usage instructions
+# ------------------------------------------------------------
+.PHONY: help
+help:
+	@echo ""
+	@echo "🔍 Makefile.watch — Kubernetes Monitoring Helpers"
+	@echo ""
+	@echo "Available targets:"
+	@echo ""
+	@echo "  make -f Makefile.watch watch-classified    📦 Simple dashboard grouped by pod status"
+	@echo "  make -f Makefile.watch watch-dashboard-pro 🚀 Advanced dashboard (progress bars, trends)"
+	@echo ""
+	@echo "Tips:"
+	@echo "  - Press Ctrl+C to stop any watcher"
+	@echo "  - Requires: kubectl, watch, awk, tput"
+	@echo ""
+
+
+# ------------------------------------------------------------
+# watch-classified
+# ------------------------------------------------------------
+.PHONY: watch-classified
+watch-classified:
+	@echo "📊 Fancy dashboard: Pods grouped by STATUS (auto-refresh every 2s)"
+	@echo ""
+	@watch -t -n 2 '\
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo "📦 Kubernetes Pods Dashboard — $$(date)"; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	echo ""; \
+	echo "🟢 RUNNING"; \
+	kubectl get pods -A --no-headers | awk '\''$$4=="Running"{print "  " $$1 "/" $$2 " (" $$4 ")"}'\'' || true; \
+	echo ""; \
+	echo "🟡 PENDING / CONTAINER CREATING"; \
+	kubectl get pods -A --no-headers | awk '\''$$4=="Pending" || $$4=="ContainerCreating"{print "  " $$1 "/" $$2 " (" $$4 ")"}'\'' || true; \
+	echo ""; \
+	echo "🔴 CRASHLOOP / ERROR / FAILED"; \
+	kubectl get pods -A --no-headers | awk '\''$$4 ~ /CrashLoop|Error|Failed/{print "  " $$1 "/" $$2 " (" $$4 ")"}'\'' || true; \
+	echo ""; \
+	echo "🔵 COMPLETED"; \
+	kubectl get pods -A --no-headers | awk '\''$$4=="Completed"{print "  " $$1 "/" $$2 " (" $$4 ")"}'\'' || true; \
+	echo ""; \
+	echo "⚪ OTHER STATES"; \
+	kubectl get pods -A --no-headers | awk '\''$$4!="Running" && $$4!="Pending" && $$4!="Completed" && $$4!="ContainerCreating" && $$4 !~ /CrashLoop|Error|Failed/{print "  " $$1 "/" $$2 " (" $$4 ")"}'\'' || true; \
+	echo ""; \
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"'
+
+# ------------------------------------------------------------
+# watch-dashboard-pro
+# ------------------------------------------------------------
+.PHONY: watch-dashboard-pro
+watch-dashboard-pro:
+	@echo "🚀 Launching PRO Kubernetes Dashboard (colors + namespace grouping)..."
+	@echo ""
+	@watch -n 2 -t bash scripts/kube-dashboard-pro.sh
+# End of Makefile.watch
